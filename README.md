@@ -1,145 +1,190 @@
-# 📚 Trabalho — Design Tático no DDD (Template para qualquer domínio)
+# 📚 Trabalho de Domain-Driven Design (DDD)
 
-> **Como usar:** copie este arquivo e substitua os **[colchetes]** com informações do **seu domínio** (e-commerce, marketplace, logística, educação, fintech, games, etc.).
-> O objetivo é praticar Entidades, Value Objects, Agregados/AR, Repositórios e Eventos de Domínio — com foco em **invariantes** e **domínio rico**.
+## Projeto: Plataforma de Detecção Precoce e Monitoramento de Risco para Doença Renal Crônica (DRC)
+Autores: Andressa Lemes, Kaique Santos, Larissa Silva Ramos, Leonardo Almeida do Carmo
+
+---
+
+# 🌐 Parte 1 — Design Estratégico
+
+## 1. Nome do Projeto
+Plataforma de Detecção Precoce e Monitoramento de Risco para Doença Renal Crônica
+
+## 2. Objetivo Principal
+Detectar precocemente risco de DRC e apoiar o acompanhamento longitudinal de pacientes na atenção básica, integrando dados clínicos e laboratoriais para priorizar triagem, disparar alertas e coordenar encaminhamentos antes de evolução para terapia renal substitutiva.
+
+## 3. Identificação dos Subdomínios
+(Core, Supporting e Generic)  
+*(baseado no arquivo DDD_1)*
+
+| Subdomínio | Descrição | Tipo |
+|------------|-----------|------|
+| Gestão de Risco & Triagem | Calcula risco de DRC, identifica população elegível para rastreio e prioriza casos. | Core |
+| Modelos Preditivos de Progressão | Prediz progressão/agravamento e janela ótima de intervenção. | Core |
+| Orquestração de Rastreamento | Agenda janelas de rastreio, solicita exames e acompanha pendências. | Core |
+| Gestão de Casos & Plano de Cuidado | Registra plano individual, consolida alertas clínicos. | Supporting |
+| Integração com Laboratórios/EHR | Ingestão de exames, conciliação de identidades. | Supporting |
+| Cadastro, Consentimento & LGPD | Identificação de paciente/profissional e gestão de consentimentos. | Supporting |
+| Notificações & Engajamento | Lembretes de coleta/consulta e adesão. | Supporting |
+| Relatórios Epidemiológicos & KPIs | Métricas de cobertura, tempo até diagnóstico, custos evitados. | Supporting |
+| Terminologias & Catálogo Clínico | Mapas de códigos (LOINC, CID-10, SIGTAP). | Generic |
+| Pagamentos/Autorização SUS | Regras para autorizar/registrar exames. | Generic |
+| Identidade & Acesso | Autenticação/autorização e perfis de acesso. | Generic |
+| Observabilidade & Plataforma | Logs, métricas, tracing, CI/CD/MLops. | Generic |
+
+## 4. Bounded Contexts
+*(resumido a partir do DDD_1)*
+
+- **Contexto de Risco e Triagem** → calcula risco e prioriza pacientes.  
+- **Contexto Preditivo** → treina e serve modelos de progressão da DRC.  
+- **Contexto de Rastreamento** → agenda e acompanha exames.  
+- **Contexto de Casos Clínicos** → mantém planos de cuidado e alertas.  
+- **Contexto de Integração Clínica** → concilia dados laboratoriais.  
+- **Contexto de Cadastro & LGPD** → gerencia identidade e consentimento.  
+- **Contexto de Engajamento** → envia notificações multicanal.  
+- **Contexto de Relatórios** → gera dashboards e KPIs.  
+- **Contexto de Plataforma** → suporte de logs, métricas e infraestrutura.  
+- **Contexto de Procedimentos SUS** → valida autorização de exames.  
+
+## 5. Comunicação entre Contextos
+- Eventos assíncronos (Kafka) → risco → rastreamento → casos clínicos.  
+- APIs síncronas → consulta imediata (ex.: `GET /score-risco/{pacienteId}`).  
+- Batch/Pipelines → alimentar modelos preditivos e relatórios epidemiológicos.  
+
+## 6. Linguagem Ubíqua
+- **Paciente**: pessoa monitorada.  
+- **População-Alvo**: elegíveis para rastreio (DM2, HAS, >60 anos).  
+- **Risco DRC**: probabilidade estimada de desenvolver/progredir.  
+- **Janela de Rastreamento**: período recomendado para exames.  
+- **Alerta Clínico**: sinal gerado por regra/modelo (queda rápida de TFG).  
+- **Plano de Cuidado**: conjunto de metas, exames, consultas.  
+- **Evento-Sentinela**: evento crítico (início de diálise, internação).  
+- **KPIs de Programa**: métricas de rastreio, diagnóstico precoce, custos evitados.  
 
 ---
 
-## 🚀 Quick start (5 passos)
-1. Escolha um **domínio** que você conheça (ex.: **[Seu Domínio]**).
-2. Liste 3–7 **invariantes** que devem estar corretas no **commit**.
-3. Escolha 1–2 **Agregados principais** (comece por **[Agregado Principal]**).
-4. Desenhe a **máquina de estados** e os **eventos** que surgem das transições.
-5. Defina o **Repositório** da AR e como lidará com **consistência** entre agregados.
+# ⚙️ Parte 2 — Design Tático
 
----
+*(preenchido com base no template do arquivo DDD_3)*
 
 ## 🩺 1) Sobre o Domínio Escolhido
-**Nome do domínio:** **[Seu Domínio]**  
-**Objetivo do sistema:** **[Frase curta que explica a proposta de valor]**  
-**Principais atores:** **[Lista: Cliente, Vendedor, Motorista, Professor, etc.]**  
-**Contextos (opcional):** **[Contextos/Bounded Contexts propostos]**
+**Nome do domínio:** Detecção Precoce e Monitoramento da Doença Renal Crônica  
+**Objetivo do sistema:** Identificar pacientes em risco de DRC e apoiar acompanhamento clínico antes de progressão grave.  
+**Principais atores:** Paciente, Médico da Atenção Básica, Laboratório, Gestor de Saúde.  
+**Contextos:** Risco e Triagem, Rastreamento, Casos Clínicos, Engajamento, Relatórios.  
 
 ---
 
 ## 🧩 2) Entidades vs Value Objects
-Preencha a tabela justificando cada tipo (identidade vs. imutabilidade).
 
-| Elemento | Tipo (Entidade/VO) | Por quê? (identidade/imutável) |
-|---|---|---|
-| **[Elemento A]** | [Entidade/VO] | [Justificativa] |
-| **[Elemento B]** | [Entidade/VO] | [Justificativa] |
-| **[Elemento C]** | [Entidade/VO] | [Justificativa] |
-| **[Elemento D]** | [Entidade/VO] | [Justificativa] |
-
-> Dica: Promova tipos semânticos: `Email`, `CPF/CNPJ`, `Money`, `IntervaloDeTempo`, `Endereco`, `Percentual`, `Quantidade`, etc. **VOs devem ser imutáveis** e com **igualdade por valor**.
+| Elemento           | Tipo            | Por quê? |
+|--------------------|-----------------|----------|
+| Paciente           | Entidade        | Possui identidade única (ID). |
+| ExameLaboratorial  | Entidade        | Cada exame tem identidade e data. |
+| ScoreRisco         | Value Object    | Imutável, resultado de cálculo. |
+| CPF                | Value Object    | Identificação única, imutável. |
+| E-mail             | Value Object    | Contato para notificações, imutável. |
 
 ---
 
 ## 🏗️ 3) Agregados e Aggregate Root (AR)
-**Agregado Principal:** **[Agregado Principal]**  
-**AR:** **[Nome da AR]**  
-**Conteúdo interno do agregado (apenas o necessário para consistência local):**  
-- **[Entidade interna/VO]**
-- **[Entidade interna/VO]**
+**Agregado Principal:** Paciente  
+**AR:** Paciente  
+**Conteúdo interno:** dados cadastrais, exames, scores de risco.  
+**Referências externas:** IDs de notificações, relatórios epidemiológicos.  
 
-**Referências a outros agregados (por ID):**  
-- **[OutroAgregadoId]** (não conter dentro do agregado)
-- **[OutroAgregadoId]**
-
-**Boundary — Por que cada item está dentro/fora?**  
-- **Dentro porque [precisa de consistência transacional por causa da invariante X]**  
-- **Fora porque [pode esperar/eventual; pertence a outro BC; só precisa de referência por ID]**
+**Boundary:**  
+- Dentro: exames e scores (consistência imediata).  
+- Fora: notificações, relatórios (eventual consistency).  
 
 ---
 
 ## 🧭 4) Invariantes e Máquina de Estados
-Liste invariantes (devem ser verdadeiras ao final de cada transação).
+**Invariantes:**  
+- Um paciente não pode ter dois CPFs diferentes.  
+- Score de risco ∈ [0,1].  
+- ExameLaboratorial deve ter data válida.  
+- Não emitir alerta sem paciente associado.  
 
-**Invariantes (exemplos):**
-- **[Não aceitar pagamento acima do limite de crédito]**
-- **[Não permitir slot de horário sobreposto para o mesmo recurso]**
-- **[Não permitir alteração após estado X]**
-- **[Preço Total = soma dos itens] (se aplicável)**
-
-**Estados e transições da AR [Nome da AR]:**
+**Estados e transições:**  
 ```
-[EstadoInicial] -> [Estado1] -> [Estado2] -> [EstadoFinal]
-Regras:
-- [Transição A] permitida se [condições/invariantes]
-- [Transição B] bloqueada se [condições]
-- [Transição C] exige [política/serviço]
+Não Monitorado -> Em Risco Detectado -> Acompanhamento Ativo -> Alta/Óbito
+
+Transição A: Não Monitorado → Em Risco (quando ScoreRisco > limiar).  
+Transição B: Em Risco → Acompanhamento (se médico confirma necessidade).  
+Transição C: Acompanhamento → Alta/Óbito (encerramento do caso).  
 ```
 
 ---
 
-## 🗃️ 5) Repositório do Agregado (interface)
-> Repositório trabalha **apenas com a AR**, sem expor entidades internas do agregado. Consultas analíticas ficam fora (read models).
-
-**Linguagem livre** (ex.: C#, Java, Kotlin, TS). Exemplo (C# assíncrono, adapte nomes):
+## 🗃️ 5) Repositório do Agregado
 ```csharp
-public interface I[Agregado]Repository
+public interface IPacienteRepository
 {
-    Task<[Agregado]?> ObterPorIdAsync(Guid id, CancellationToken ct = default);
-    Task AdicionarAsync([Agregado] entidade, CancellationToken ct = default);
-    Task SalvarAsync([Agregado] entidade, CancellationToken ct = default);
+    Task<Paciente?> ObterPorIdAsync(Guid id, CancellationToken ct = default);
+    Task AdicionarAsync(Paciente paciente, CancellationToken ct = default);
+    Task SalvarAsync(Paciente paciente, CancellationToken ct = default);
 }
 ```
-
 
 ---
 
 ## 📣 6) Eventos de Domínio
-Defina **2–4 eventos** com **payload mínimo** e **momento de publicação** (preferir **pós-commit**). Diferencie **evento interno** vs **evento de integração**.
 
-| Evento | Quando ocorre | Payload mínimo | Interno/Integração | Observações |
-|---|---|---|---|---|
-| **[EventoXOcorrido]** | [ao confirmar/remarcar/etc.] | [ids, valores necessários] | [Interno/Integração] | [idempotência, consumidor] |
-| **[EventoYOcorrida]** | [...] | [...] | [...] | [...] |
-| **[EventoZOcorrida]** | [...] | [...] | [...] | [...] |
+| Evento                | Quando ocorre                               | Payload mínimo            | Interno/Integração | Observações |
+|------------------------|---------------------------------------------|---------------------------|--------------------|-------------|
+| PacienteCadastrado     | Novo paciente registrado                   | {PacienteId, CPF, Email} | Integração         | Aciona rastreamento inicial |
+| ExameRegistrado        | Exame vinculado a paciente                 | {PacienteId, ExameId}    | Interno            | Atualiza estado clínico |
+| ScoreRiscoGerado       | Modelo calcula risco                       | {PacienteId, Score}      | Interno            | Pode disparar alerta |
+| AlertaClinicoEmitido   | Score ultrapassa limiar crítico            | {PacienteId, Score}      | Integração         | Notificação a médico e paciente |
 
 ---
 
-## 🗺️ 8) Diagrama (Mermaid ou ferramenta à sua escolha)
-> Mostre **Agregados/AR**, **VOs** e **relacionamentos por ID** entre agregados (não “contenha” outros agregados).
-
-**Exemplo de esqueleto Mermaid:**
+## 🗺️ 7) Diagrama (Mermaid)
 ```mermaid
 classDiagram
-  class AgregadoPrincipal {
+  class Paciente {
     +Guid Id
-    +Guid OutroAgregadoId
-    +VOImportante Valor
-    +Status Estado
-    +Operacao1(args)
-    +Operacao2(args)
+    +CPF cpf
+    +Email email
+    +List~ExameLaboratorial~ exames
+    +List~ScoreRisco~ scores
+    +Status estado
   }
 
-  class VOImportante {
-    +Atributo1
-    +Atributo2
-    +OperacaoVO()
-  }
-
-  class OutroAgregado {
+  class ExameLaboratorial {
     +Guid Id
+    +DataColeta data
+    +Resultado valores
   }
 
-  AgregadoPrincipal --> OutroAgregado : por Id
-  AgregadoPrincipal --> VOImportante
+  class ScoreRisco {
+    +double valor
+    +DataReferencia data
+  }
+
+  class AlertaClinico {
+    +Guid Id
+    +double score
+    +Data data
+  }
+
+  Paciente --> ExameLaboratorial
+  Paciente --> ScoreRisco
+  Paciente --> AlertaClinico : via evento
 ```
 
 ---
 
 ## ✅ Checklist de Aceitação
-- [ ] **VOs imutáveis** e com **igualdade por valor** (nada de “string de CPF/Email”).
-- [ ] **Boundary do agregado** pequeno e com **invariantes claras**.
-- [ ] **Domínio rico**: operações do negócio como métodos (evitar `set` aberto).
-- [ ] **Repositório** focado na **AR** (sem `IQueryable`/detalhes de ORM no domínio).
+- ✅ VOs imutáveis (CPF, Email, ScoreRisco).  
+- ✅ Boundaries de agregados pequenos e consistentes.  
+- ✅ Domínio rico (regras encapsuladas nas entidades).  
+- ✅ Repositório foca apenas na Aggregate Root.  
 
-
-## 📤 Entrega
-
-- **Inclua**: link/imagem do **diagrama** + todas as seções acima preenchidas.
 ---
+
+# 📤 Entrega
+
+[Abrir documento no Google Drive](https://drive.google.com/file/d/1SlnXsf1FBGApyUSL1RKuAJgb0jxRGdFQ/view?usp=sharing)
 
